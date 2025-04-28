@@ -6,7 +6,8 @@ class Post(models.Model):
     content = models.TextField()
     image = models.ImageField(upload_to='media/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    likes = models.IntegerField(default=0)
+    
     def __str__(self):
         return self.content
 

@@ -1,10 +1,11 @@
 services:
   db:
+    container_name: twitthon_postgres
     image: postgres:16-alpine
     expose:
       - 5432
     volumes:
-      - twitthon_db:/var/lib/postgresql/data
+      - postgres_db:/var/lib/postgresql/data
     env_file:
       - .env
     environment:
@@ -32,4 +33,4 @@ services:
       - .env
 
 volumes:
-  twitthon_db:
+  postgres_db:
