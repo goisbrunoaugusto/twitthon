@@ -7,15 +7,15 @@ from rest_framework_simplejwt.views import (
 
 
 urlpatterns = [
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('user/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('register/', RegisterUserView.as_view(), name='register'),
+    path('user/register/', RegisterUserView.as_view(), name='register'),
     path('user/<str:username>/', RetrieveUserView.as_view(), name='user_info'),
-    path('post/', PostCreateView.as_view(), name='create_post'),
-    path('follow/<str:username>/', FollowUserView.as_view(), name='follow_user'),
-    path('unfollow/<str:username>/', UnfollowUserView.as_view(), name='unfollow_user'),
-    path('follows/', ListUserFollowsView.as_view(), name='list_user_follows'),
-    path('feed/', FeedListView.as_view(), name='feed'),
+    path('posts/', PostCreateView.as_view(), name='create_post'),
+    path('user/follow/<str:username>/', FollowUserView.as_view(), name='follow_user'),
+    path('user/unfollow/<str:username>/', UnfollowUserView.as_view(), name='unfollow_user'),
+    path('user/follows/', ListUserFollowsView.as_view(), name='list_user_follows'),
+    path('user/feed/', FeedListView.as_view(), name='feed'),
     path('posts/like/<int:post_id>/', LikePostView.as_view(), name='like-post'),
     path('posts/unlike/<int:post_id>/', UnlikePostView.as_view(), name='unlike-post'),
 
