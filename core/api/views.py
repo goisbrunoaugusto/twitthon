@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from .models import Follow
+from .models import Follow, Post
 from .serializers import UserSerializer, PostSerializer
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -90,3 +90,11 @@ class ListUserFollowsView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return User.objects.filter(followers__follower=user)
+
+class FeedListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostSerializer
+
+    def get_queryset(self):
+        following_users = Follow.objects.filter(follower=self.request.user).values_list('following_id', flat=True)
+        return Post.objects.filter(author__in=following_users).order_by('-created_at')

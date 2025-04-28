@@ -19,10 +19,9 @@ class UserSerializer(serializers.ModelSerializer):
         return user
     
 class PostSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source='author.username', read_only=True)
+
     class Meta:
         model = Post
         fields = ('id', 'author', 'content', 'image', 'created_at', 'likes')
-        extra_kwargs = {'author': {'read_only': True},
-                        'created_at': {'read_only': True},
-                        'likes': {'read_only': True},
-        }
+        
