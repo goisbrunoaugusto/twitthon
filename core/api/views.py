@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from .models import Follow, Post
+from .models import Follow, Like, Post
 from .serializers import UserSerializer, PostSerializer
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from rest_framework.exceptions import NotFound
 from rest_framework.decorators import api_view, permission_classes
+from django.db import models
 
 class RegisterUserView(generics.CreateAPIView):
 
@@ -98,3 +99,40 @@ class FeedListView(generics.ListAPIView):
     def get_queryset(self):
         following_users = Follow.objects.filter(follower=self.request.user).values_list('following_id', flat=True)
         return Post.objects.filter(author__in=following_users).order_by('-created_at')
+    
+class LikePostView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, post_id, *args, **kwargs):
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        created = Like.objects.get_or_create(user=request.user, post=post)
+        if created:
+            post.likes = models.F('likes') + 1
+            post.save(update_fields=['likes'])
+            post.refresh_from_db(fields=['likes'])
+            return Response({"message": "Post liked", "likes": post.likes}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message": "Already liked", "likes": post.likes}, status=status.HTTP_200_OK)
+
+class UnlikePostView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, post_id, *args, **kwargs):
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            like = Like.objects.get(user=request.user, post=post)
+            like.delete()
+            post.likes = models.F('likes') - 1
+            post.save(update_fields=['likes'])
+            post.refresh_from_db(fields=['likes'])
+            return Response({"message": "Post unliked", "likes": post.likes}, status=status.HTTP_200_OK)
+        except Like.DoesNotExist:
+            return Response({"error": "You haven't liked this post"}, status=status.HTTP_400_BAD_REQUEST)
