@@ -20,7 +20,7 @@ services:
 
   web:
     build:
-      context: .
+      context: ./core
       dockerfile: Dockerfile
     depends_on:
       db:
