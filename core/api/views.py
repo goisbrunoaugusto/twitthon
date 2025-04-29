@@ -109,7 +109,7 @@ class LikePostView(generics.CreateAPIView):
         except Post.DoesNotExist:
             return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        created = Like.objects.get_or_create(user=request.user, post=post)
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
         if created:
             post.likes = models.F('likes') + 1
             post.save(update_fields=['likes'])
