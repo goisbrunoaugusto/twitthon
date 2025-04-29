@@ -1,15 +1,15 @@
-FROM node:18-alpine
+FROM node:23-slim
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package*.json .
 
 RUN npm install --frozen-lockfile
 
 COPY . .
 
-RUN npm run build
+RUN npm install
 
 EXPOSE 5173
 
-CMD ["npm", "run", "preview"]
+CMD ["npm", "run", "dev","--", "--host", "0.0.0.0"]
