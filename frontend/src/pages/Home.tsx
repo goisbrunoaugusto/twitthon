@@ -46,6 +46,7 @@ function Home() {
     const [next, setNext] = useState<string | null>(null);
     const [previous, setPrevious] = useState<string | null>(null);
     const [page, setPage] = useState(1);
+    const [tweetContent, setTweetContent] = useState(""); // New state for tweet content
 
     // Fetch posts and set liked state from localStorage
     const fetchPosts = (pageNum: number) => {
@@ -106,26 +107,38 @@ function Home() {
                 .catch(err => console.error(err));
         }
     };
+    const handleTweet = async () => {
+        if (!tweetContent.trim()) return;
+        try {
+            await api.post("/posts/", { content: tweetContent });
+            setTweetContent("");
+            fetchPosts(1); // Refresh feed to show new post
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-base-100 flex flex-col items-center">
             {/* Header */}
             <header className="w-full border-b border-base-300 py-4 px-6 flex items-center justify-between bg-base-100 sticky top-0 z-10">
                 <h1 className="text-2xl font-bold text-primary">Twitthon</h1>
-                <button className="btn btn-primary">Tweet</button>
+                <button className="btn btn-primary"
+                    onClick={handleTweet}
+                    disabled={!tweetContent.trim()}>Tweet</button>
             </header>
 
             {/* Main Content */}
             <main className="w-full max-w-xl flex-1 flex flex-col gap-4 mt-6">
                 {/* Tweet Box */}
                 <div className="bg-base-200 rounded-lg p-4 flex gap-3 items-start">
-                    <div className="avatar">
-                        <div className="w-12 rounded-full bg-neutral"></div>
-                    </div>
+
                     <textarea
                         className="textarea textarea-bordered w-full resize-none"
                         placeholder="What's happening?"
                         rows={3}
+                        value={tweetContent}
+                        onChange={e => setTweetContent(e.target.value)}
                     />
                 </div>
 
@@ -136,9 +149,7 @@ function Home() {
                     ) : (
                         posts.map(post => (
                             <div key={post.id} className="bg-base-200 rounded-lg p-4 flex gap-3">
-                                <div className="avatar">
-                                    <div className="w-10 rounded-full bg-neutral"></div>
-                                </div>
+
                                 <div>
                                     <div className="font-semibold">
                                         {post.author} <span className="text-xs text-base-content/50">{new Date(post.created_at).toLocaleString()}</span>
