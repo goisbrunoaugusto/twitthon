@@ -10,6 +10,25 @@ from rest_framework.exceptions import NotFound
 from rest_framework.decorators import api_view, permission_classes
 from django.db import models
 from django.db.models import Q
+from rest_framework.permissions import BasePermission
+
+class IsAuthor(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.author == request.user
+
+class PostUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated, IsAuthor]
+
+    def get_object(self):
+        post_id = self.kwargs.get('pk')
+        try:
+            post = Post.objects.get(pk=post_id)
+        except Post.DoesNotExist:
+            raise NotFound("Post not found")
+        self.check_object_permissions(self.request, post)
+        return post
 
 class RegisterUserView(generics.CreateAPIView):
 
