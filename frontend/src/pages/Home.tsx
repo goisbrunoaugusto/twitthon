@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../api";
 import '../index.css';
 import { LIKED_POSTS_KEY } from "../constants";
@@ -47,6 +47,8 @@ function Home() {
     const [previous, setPrevious] = useState<string | null>(null);
     const [page, setPage] = useState(1);
     const [tweetContent, setTweetContent] = useState(""); // New state for tweet content
+    const [tweetImage, setTweetImage] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Fetch posts and set liked state from localStorage
     const fetchPosts = (pageNum: number) => {
@@ -108,15 +110,25 @@ function Home() {
         }
     };
     const handleTweet = async () => {
-        if (!tweetContent.trim()) return;
+        if (!tweetContent.trim() && !tweetImage) return;
         try {
-            await api.post("/posts/", { content: tweetContent });
+            const formData = new FormData();
+            formData.append("content", tweetContent);
+            if (tweetImage) {
+                formData.append("image", tweetImage);
+            }
+            await api.post("/posts/", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
             setTweetContent("");
+            setTweetImage(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
             fetchPosts(1); // Refresh feed to show new post
         } catch (err) {
             console.error(err);
         }
     };
+
 
     return (
         <div className="min-h-screen bg-base-100 flex flex-col items-center">
@@ -125,21 +137,61 @@ function Home() {
                 <h1 className="text-2xl font-bold text-primary">Twitthon</h1>
                 <button className="btn btn-primary"
                     onClick={handleTweet}
-                    disabled={!tweetContent.trim()}>Tweet</button>
+                    disabled={!tweetContent.trim() && !tweetImage}>Tweet</button>
             </header>
 
             {/* Main Content */}
             <main className="w-full max-w-xl flex-1 flex flex-col gap-4 mt-6">
                 {/* Tweet Box */}
                 <div className="bg-base-200 rounded-lg p-4 flex gap-3 items-start">
-
-                    <textarea
-                        className="textarea textarea-bordered w-full resize-none"
-                        placeholder="What's happening?"
-                        rows={3}
-                        value={tweetContent}
-                        onChange={e => setTweetContent(e.target.value)}
-                    />
+                    <div className="avatar">
+                        <div className="w-12 rounded-full bg-neutral"></div>
+                    </div>
+                    <div className="flex-1 flex flex-col gap-2">
+                        <textarea
+                            className="textarea textarea-bordered w-full resize-none"
+                            placeholder="What's happening?"
+                            rows={3}
+                            value={tweetContent}
+                            onChange={e => setTweetContent(e.target.value)}
+                        />
+                        {/* DaisyUI file input */}
+                        {!tweetImage && (
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={fileInputRef}
+                                className="file-input file-input-bordered file-input-primary w-full max-w-xs"
+                                onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        setTweetImage(e.target.files[0]);
+                                    } else {
+                                        setTweetImage(null);
+                                    }
+                                }}
+                            />
+                        )}
+                        {tweetImage && (
+                            <div className="mt-2 flex flex-col items-center">
+                                <img
+                                    src={URL.createObjectURL(tweetImage)}
+                                    alt="Preview"
+                                    className="rounded-lg max-h-[32rem]" // max-h-128 (bigger preview)
+                                    style={{ maxWidth: "100%" }}
+                                />
+                                {/* Optional: Add a remove button */}
+                                <button
+                                    className="btn btn-xs btn-error mt-2"
+                                    onClick={() => {
+                                        setTweetImage(null);
+                                        if (fileInputRef.current) fileInputRef.current.value = "";
+                                    }}
+                                >
+                                    Remover imagem
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Feed */}
