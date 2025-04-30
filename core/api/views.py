@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from rest_framework.exceptions import NotFound
 from rest_framework.decorators import api_view, permission_classes
 from django.db import models
+from django.db.models import Q
 
 class RegisterUserView(generics.CreateAPIView):
 
@@ -98,7 +99,9 @@ class FeedListView(generics.ListAPIView):
 
     def get_queryset(self):
         following_users = Follow.objects.filter(follower=self.request.user).values_list('following_id', flat=True)
-        return Post.objects.filter(author__in=following_users).order_by('-created_at')
+        return Post.objects.filter(
+            Q(author__in=following_users) | Q(author=self.request.user)
+        ).order_by('-created_at')
     
 class LikePostView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
