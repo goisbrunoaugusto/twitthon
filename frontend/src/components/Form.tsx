@@ -22,13 +22,10 @@ function Form({ route, method }: { route?: string; method?: string }) {
                 const response = await api.post(route!, { username, password })
                 localStorage.setItem(ACCESS_TOKEN, response.data.access);
                 localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
-                console.log("Access Token:", response.data.access);
-                console.log("Refresh Token:", response.data.refresh);
 
                 navigate("/");
             } else {
                 const response = await api.post(route!, { username, email, password })
-                console.log("Register response:", response.data);
                 navigate("/login");
             }
         } catch (error) { alert(error) } finally { setLoading(false) }
