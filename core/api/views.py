@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.db import models
 from django.db.models import Q
 from rest_framework.permissions import BasePermission
+from rest_framework.views import APIView
 
 class IsAuthor(BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -44,15 +45,21 @@ class RegisterUserView(generics.CreateAPIView):
             "message": "User created successfully"
         }, status=status.HTTP_201_CREATED)
     
-class RetrieveUserView(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+class RetrieveUserView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        username = self.kwargs.get('username')
+    def get(self, request, *args, **kwargs):
+        user_id = request.GET.get('id')
+        username = request.GET.get('username')
         try:
-            return User.objects.get(username=username)
+            if user_id:
+                user = User.objects.get(pk=user_id)
+            elif username:
+                user = User.objects.get(username=username)
+            else:
+                raise NotFound(detail="No id or username provided")
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
         except User.DoesNotExist:
             raise NotFound(detail="User not found")
     
