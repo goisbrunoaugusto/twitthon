@@ -19,5 +19,5 @@ urlpatterns = [
     path('posts/like/<int:post_id>/', LikePostView.as_view(), name='like-post'),
     path('posts/unlike/<int:post_id>/', UnlikePostView.as_view(), name='unlike-post'),
     path('posts/edit/<int:pk>/', PostUpdateView.as_view(), name='update_post'),
-    path('posts/user/', UserPostsView.as_view(), name='retrieve_post'),
+    path('posts/<str:username>/', UserPostsView.as_view(), name='retrieve_post'),
 ]

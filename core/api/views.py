@@ -127,7 +127,12 @@ class UserPostsView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Post.objects.filter(author=self.request.user).order_by('-created_at')
+        username = self.kwargs.get('username')
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound("User not found")
+        return Post.objects.filter(author=user).order_by('-created_at')
     
 class LikePostView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
