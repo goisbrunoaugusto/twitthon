@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import FeedListView, FollowUserView, LikePostView, ListUserFollowsView, PostCreateView, PostUpdateView, RegisterUserView, RetrieveUserView, UnfollowUserView, UnlikePostView
+from .views import FeedListView, FollowUserView, LikePostView, ListUserFollowsView, PostCreateView, PostUpdateView, RegisterUserView, RetrieveUserView, UnfollowUserView, UnlikePostView, UserPostsView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -19,4 +19,5 @@ urlpatterns = [
     path('posts/like/<int:post_id>/', LikePostView.as_view(), name='like-post'),
     path('posts/unlike/<int:post_id>/', UnlikePostView.as_view(), name='unlike-post'),
     path('posts/edit/<int:pk>/', PostUpdateView.as_view(), name='update_post'),
+    path('posts/user/', UserPostsView.as_view(), name='retrieve_post'),
 ]

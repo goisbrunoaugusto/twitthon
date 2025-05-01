@@ -122,6 +122,13 @@ class FeedListView(generics.ListAPIView):
             Q(author__in=following_users) | Q(author=self.request.user)
         ).order_by('-created_at')
     
+class UserPostsView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Post.objects.filter(author=self.request.user).order_by('-created_at')
+    
 class LikePostView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
