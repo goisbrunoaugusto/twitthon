@@ -23,7 +23,7 @@ class PostUpdateView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, IsAuthor]
 
     def get_object(self):
-        post_id = self.kwargs.get('pk')
+        post_id = self.kwargs.get('post_id')
         try:
             post = Post.objects.get(pk=post_id)
         except Post.DoesNotExist:
@@ -145,7 +145,22 @@ class UserPostsView(generics.ListAPIView):
                 raise NotFound("No username or user_id provided")
         except User.DoesNotExist:
             raise NotFound("User not found")
-        return Post.objects.filter(author=user).order_by('-created_at')    
+        return Post.objects.filter(author=user).order_by('-created_at')
+
+class PostDeleteView(generics.DestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated, IsAuthor]
+
+    def get_object(self):
+        post_id = self.kwargs.get('post_id')
+        try:
+            post = Post.objects.get(pk=post_id)
+        except Post.DoesNotExist:
+            raise NotFound("Post not found")
+        self.check_object_permissions(self.request, post)
+        return post
+
 class LikePostView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
