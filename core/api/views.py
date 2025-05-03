@@ -49,19 +49,24 @@ class RetrieveUserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        user_id = request.GET.get('id')
-        username = request.GET.get('username')
+        user_identifier = kwargs.get('user_identifier')
+
         try:
-            if user_id:
+            user_id = int(user_identifier)
+            try:
                 user = User.objects.get(pk=user_id)
-            elif username:
-                user = User.objects.get(username=username)
-            else:
-                raise NotFound(detail="No id or username provided")
-            serializer = UserSerializer(user)
-            return Response(serializer.data)
-        except User.DoesNotExist:
-            raise NotFound(detail="User not found")
+                serializer = UserSerializer(user)
+                return Response(serializer.data)
+            except User.DoesNotExist:
+                raise NotFound(detail=f"User with ID '{user_id}' not found")
+        except ValueError:
+            try:
+                user = User.objects.get(username=user_identifier)
+                serializer = UserSerializer(user)
+                return Response(serializer.data)
+            except User.DoesNotExist:
+                raise NotFound(detail=f"User with username '{user_identifier}' not found")
+
     
 class PostCreateView(generics.CreateAPIView):
     serializer_class = PostSerializer
