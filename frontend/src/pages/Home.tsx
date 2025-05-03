@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../api";
 import '../index.css';
-import { LIKED_POSTS_KEY, ACCESS_TOKEN } from "../constants";
+import { LIKED_POSTS_KEY } from "../constants";
 import Header from "../components/Header";
-import { Link } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 import Feed from "../components/Feed";
 import TweetBox from "../components/TweetBox";
 import Pagination from "../components/Pagination";
+import Sidebar from "../components/Sidebar";
 
 type Post = {
     id: number;
@@ -25,14 +24,6 @@ type FeedResponse = {
     previous: string | null;
     results: Post[];
 };
-
-
-
-function getPageFromUrl(url: string | null): number | null {
-    if (!url) return null;
-    const match = url.match(/page=(\d+)/);
-    return match ? parseInt(match[1]) : null;
-}
 
 function getLikedPostsFromStorage(): number[] {
     try {
@@ -61,7 +52,7 @@ function Home() {
     // Fetch posts and set liked state from localStorage
     const fetchPosts = (pageNum: number) => {
         setLoading(true);
-        api.get(`/user/feed/?page=${pageNum}`)
+        api.get(`/users/feed/?page=${pageNum}`)
             .then(res => {
                 const data: FeedResponse = res.data;
                 const likedIds = getLikedPostsFromStorage();
@@ -90,7 +81,7 @@ function Home() {
     const handleLike = (post: Post) => {
         const likedIds = getLikedPostsFromStorage();
         if (!post.liked) {
-            api.post(`/posts/like/${post.id}/`)
+            api.post(`/posts/${post.id}/like/`)
                 .then(() => {
                     setPosts(posts =>
                         posts.map(p =>
@@ -103,7 +94,7 @@ function Home() {
                 })
                 .catch(err => console.error(err));
         } else {
-            api.delete(`/posts/unlike/${post.id}/`)
+            api.delete(`/posts/${post.id}/like/`)
                 .then(() => {
                     setPosts(posts =>
                         posts.map(p =>
@@ -137,28 +128,13 @@ function Home() {
         }
     };
 
-
     return (
         <div className="min-h-screen bg-base-100 flex flex-col w-full">
             <Header />
 
             {/* Main Content */}
             <div className="flex-1 flex flex-row">
-                {/* Sidebar */}
-                <aside className="hidden md:flex flex-col gap-4 px-6 py-8 w-64 min-h-screen border-r border-base-300 sticky top-0">
-                    <nav className="flex flex-col gap-2">
-                        {/* TODO NavLink*/}
-                        <button className="btn btn-ghost justify-start text-lg">
-                            Home
-                        </button>
-                        <button className="btn btn-ghost justify-start text-lg">
-                            Profile
-                        </button>
-                        <button className="btn btn-ghost justify-start text-lg">
-                            Settings
-                        </button>
-                    </nav>
-                </aside>
+                <Sidebar />
                 <div className="flex flex-1 justify-center mt-6">
                     <main className="w-full max-w-xl just flex-1 flex flex-col gap-4 mt-6">
 

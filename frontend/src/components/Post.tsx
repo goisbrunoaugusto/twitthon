@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import type { Post } from "../types.ts";
 import { ACCESS_TOKEN } from "../constants.ts";
 import { jwtDecode } from "jwt-decode";
-import api from "../api.ts";
 
 interface PostProps {
     post: Post;
@@ -25,7 +24,7 @@ const Post = ({ post, handleLike }: PostProps) => (
         <div>
             <div className="font-semibold">
                 <Link
-                    to={`/user/${post.author}`}
+                    to={`/users/${post.author}`}
                     className="hover:text-primary transition-colors"
                 >
                     {post.author}
