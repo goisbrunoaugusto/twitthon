@@ -112,6 +112,43 @@ class FollowUserView(APIView):
             return Response({"message": f"You have unfollowed {username}"}, status=status.HTTP_200_OK)
         except Follow.DoesNotExist:
             return Response({"error": f"You are not following {username}"}, status=status.HTTP_400_BAD_REQUEST)
+        
+class CheckFollowingStatusView(APIView):
+    """
+    View to check if the current user is following another user.
+    The target user can be identified by either username or ID.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, user_identifier, *args, **kwargs):
+        # First, find the target user by ID or username
+        try:
+            # Try to interpret user_identifier as an ID
+            user_id = int(user_identifier)
+            try:
+                target_user = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                raise NotFound(f"User with ID '{user_id}' not found")
+        except ValueError:
+            # If not an integer, treat as username
+            try:
+                target_user = User.objects.get(username=user_identifier)
+            except User.DoesNotExist:
+                raise NotFound(f"User with username '{user_identifier}' not found")
+        
+        # Check if current user follows target user
+        is_following = Follow.objects.filter(
+            follower=request.user,
+            following=target_user
+        ).exists()
+        
+        # Return the status
+        return Response({
+            "is_following": is_following,
+            "username": target_user.username,
+            "user_id": target_user.id
+        }, status=status.HTTP_200_OK)
+
 
 class ListUserFollowsView(generics.ListAPIView):
     serializer_class = UserSerializer
