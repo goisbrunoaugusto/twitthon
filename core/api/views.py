@@ -17,7 +17,7 @@ class IsAuthor(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.author == request.user
 
-class PostUpdateView(generics.RetrieveUpdateAPIView):
+class PostUpdateView(generics.UpdateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated, IsAuthor]
@@ -70,14 +70,14 @@ class PostCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-class FollowUserView(generics.CreateAPIView):
+class FollowUserView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, username, *args, **kwargs):
+    def post(self, request, username):
         try:
             user_to_follow = User.objects.get(username=username)
         except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "User to follow not found"}, status=status.HTTP_404_NOT_FOUND)
 
         if user_to_follow == request.user:
             return Response({"error": "You cannot follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
@@ -91,15 +91,12 @@ class FollowUserView(generics.CreateAPIView):
             return Response({"message": f"You are now following {username}"}, status=status.HTTP_201_CREATED)
         else:
             return Response({"message": f"You are already following {username}"}, status=status.HTTP_200_OK)
-        
-class UnfollowUserView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
 
-    def destroy(self, request, username, *args, **kwargs):
+    def delete(self, request, username):
         try:
             user_to_unfollow = User.objects.get(username=username)
         except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "User to unfollow not found"}, status=status.HTTP_404_NOT_FOUND)
 
         if user_to_unfollow == request.user:
             return Response({"error": "You cannot unfollow yourself"}, status=status.HTTP_400_BAD_REQUEST)
@@ -110,7 +107,7 @@ class UnfollowUserView(generics.DestroyAPIView):
             return Response({"message": f"You have unfollowed {username}"}, status=status.HTTP_200_OK)
         except Follow.DoesNotExist:
             return Response({"error": f"You are not following {username}"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
 class ListUserFollowsView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -134,18 +131,22 @@ class UserPostsView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        username = self.kwargs.get('username') or self.request.query_params.get('username')
-        user_id = self.kwargs.get('id') or self.request.query_params.get('id')
+        user_identifier = self.kwargs.get('user_identifier')
+
         try:
-            if user_id:
+            user_id = int(user_identifier)
+            try:
                 user = User.objects.get(pk=user_id)
-            elif username:
-                user = User.objects.get(username=username)
-            else:
-                raise NotFound("No username or user_id provided")
-        except User.DoesNotExist:
-            raise NotFound("User not found")
-        return Post.objects.filter(author=user).order_by('-created_at')
+                return Post.objects.filter(author=user).order_by('-created_at')
+            except User.DoesNotExist:
+                raise NotFound(f"User with ID '{user_id}' not found")
+        except ValueError:
+            try:
+                user = User.objects.get(username=user_identifier)
+                return Post.objects.filter(author=user).order_by('-created_at')
+            except User.DoesNotExist:
+                raise NotFound(f"User with username '{user_identifier}' not found")
+
 
 class PostDeleteView(generics.DestroyAPIView):
     queryset = Post.objects.all()
@@ -161,10 +162,10 @@ class PostDeleteView(generics.DestroyAPIView):
         self.check_object_permissions(self.request, post)
         return post
 
-class LikePostView(generics.CreateAPIView):
+class LikeView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, post_id, *args, **kwargs):
+    def post(self, request, post_id):
         try:
             post = Post.objects.get(id=post_id)
         except Post.DoesNotExist:
@@ -177,12 +178,9 @@ class LikePostView(generics.CreateAPIView):
             post.refresh_from_db(fields=['likes'])
             return Response({"message": "Post liked", "likes": post.likes}, status=status.HTTP_201_CREATED)
         else:
-            return Response({"message": "Already liked", "likes": post.likes}, status=status.HTTP_200_OK)
+            return Response({"message": "Already liked"}, status=status.HTTP_200_OK)
 
-class UnlikePostView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
-
-    def delete(self, request, post_id, *args, **kwargs):
+    def delete(self, request, post_id):
         try:
             post = Post.objects.get(id=post_id)
         except Post.DoesNotExist:
@@ -197,3 +195,4 @@ class UnlikePostView(generics.DestroyAPIView):
             return Response({"message": "Post unliked", "likes": post.likes}, status=status.HTTP_200_OK)
         except Like.DoesNotExist:
             return Response({"error": "You haven't liked this post"}, status=status.HTTP_400_BAD_REQUEST)
+

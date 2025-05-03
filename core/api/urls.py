@@ -1,5 +1,7 @@
 from django.urls import path
-from .views import FeedListView, FollowUserView, LikePostView, ListUserFollowsView, PostCreateView, PostDeleteView, PostUpdateView, RegisterUserView, RetrieveUserView, UnfollowUserView, UnlikePostView, UserPostsView
+from .views import (FeedListView, FollowUserView, LikeView, ListUserFollowsView,
+PostCreateView, PostDeleteView, PostUpdateView, RegisterUserView, RetrieveUserView,
+ UserPostsView)
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -7,18 +9,16 @@ from rest_framework_simplejwt.views import (
 
 
 urlpatterns = [
-    path('user/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('users/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('user/register/', RegisterUserView.as_view(), name='register'),
-    path('user/info/', RetrieveUserView.as_view(), name='user_info'),
-    path('user/follow/<str:username>/', FollowUserView.as_view(), name='follow_user'),
-    path('user/unfollow/<str:username>/', UnfollowUserView.as_view(), name='unfollow_user'),
-    path('user/follows/', ListUserFollowsView.as_view(), name='list_user_follows'),
-    path('user/feed/', FeedListView.as_view(), name='feed'),
+    path('users/register/', RegisterUserView.as_view(), name='register'),
+    path('users/info/', RetrieveUserView.as_view(), name='user_info'),
+    path('users/<str:username>/follow/', FollowUserView.as_view(), name='follow_user'),
+    path('users/follows/', ListUserFollowsView.as_view(), name='list_user_follows'),
+    path('users/feed/', FeedListView.as_view(), name='feed'),
+    path('users/<user_identifier>/posts/', UserPostsView.as_view(), name='retrieve_posts'),
     path('posts/', PostCreateView.as_view(), name='create_post'),
     path('posts/<int:post_id>/', PostDeleteView.as_view(), name='delete_post'),
-    path('posts/like/<int:post_id>/', LikePostView.as_view(), name='like-post'),
-    path('posts/unlike/<int:post_id>/', UnlikePostView.as_view(), name='unlike-post'),
-    path('posts/edit/<int:post_id>/', PostUpdateView.as_view(), name='update_post'),
-    path('posts/list/', UserPostsView.as_view(), name='retrieve_post'),
+    path('posts/<int:post_id>/like/', LikeView.as_view(), name='like-post'),
+    path('posts/<int:post_id>/edit/', PostUpdateView.as_view(), name='update_post'),
 ]

@@ -290,7 +290,7 @@ class FollowTests(APITestCase):
         
         Follow.objects.create(follower=self.user1, following=self.user2)
         
-        url = reverse('unfollow_user', kwargs={'username': self.user2.username})
+        url = reverse('follow_user', kwargs={'username': self.user2.username})
         response = self.client.delete(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -300,7 +300,7 @@ class FollowTests(APITestCase):
         """
         Test attempting to unfollow a user who is not being followed.
         """
-        url = reverse('unfollow_user', kwargs={'username': self.user2.username})
+        url = reverse('follow_user', kwargs={'username': self.user2.username})
         response = self.client.delete(url)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -375,50 +375,57 @@ class FeedTests(APITestCase):
 
 class UserPostsTests(APITestCase):
     def setUp(self):
-        
-        self.user1 = User.objects.create_user(
-            username='user1',
-            password='password123',
-            email='user1@example.com'
-        )
-        self.user2 = User.objects.create_user(
-            username='user2',
-            password='password123',
-            email='user2@example.com'
-        )
-        
-        
-        self.client = APIClient()
+        self.user1 = User.objects.create_user(username='testuser1', password='password123', email='testuser1@email.com')
+        self.user2 = User.objects.create_user(username='testuser2', password='password456', email='testuser2@email.com')
         self.client.force_authenticate(user=self.user1)
-        
-        
-        self.post1 = Post.objects.create(author=self.user1, content="User1 post 1")
-        self.post2 = Post.objects.create(author=self.user1, content="User1 post 2")
-        self.post3 = Post.objects.create(author=self.user2, content="User2 post")
-    
+
+        Post.objects.create(author=self.user1, content="User1 post 1")
+        Post.objects.create(author=self.user1, content="User1 post 2")
+        Post.objects.create(author=self.user2, content="User2 post")
+
     def test_get_posts_by_username(self):
         """
-        Test retrieving posts by username parameter.
+        Test retrieving posts by username in the URL path.
         """
-        url = f"{reverse('retrieve_post')}?username={self.user2.username}"
+        url = reverse('retrieve_posts', kwargs={'user_identifier': self.user2.username})
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(len(response.data['results']), 1)  # Assuming ListAPIView returns a list directly
         self.assertEqual(response.data['results'][0]['content'], "User2 post")
-    
+        self.assertEqual(response.data['results'][0]['author'], self.user2.username) # Verify author ID
+
     def test_get_posts_by_id(self):
         """
-        Test retrieving posts by user ID.
+        Test retrieving posts by user ID in the URL path.
         """
-        url = f"{reverse('retrieve_post')}?id={self.user1.id}"
+        url = reverse('retrieve_posts', kwargs={'user_identifier': str(self.user1.id)})
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 2)
+        self.assertEqual(len(response.data['results']), 2) # Assuming ListAPIView returns a list directly
         contents = [post['content'] for post in response.data['results']]
+        author_usernames = [post['author'] for post in response.data['results']]
         self.assertIn("User1 post 1", contents)
         self.assertIn("User1 post 2", contents)
+        self.assertTrue(all(author_username == self.user1.username for author_username in author_usernames)) # Verify all posts are by user1
+
+    def test_get_posts_by_invalid_username(self):
+        """
+        Test retrieving posts with an invalid username.
+        """
+        url = reverse('retrieve_posts', kwargs={'user_identifier': 'nonexistentuser'})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_posts_by_invalid_id(self):
+        """
+        Test retrieving posts with an invalid user ID.
+        """
+        url = reverse('retrieve_posts', kwargs={'user_identifier': '999'})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
 
 
 class LikeTests(APITestCase):
@@ -484,7 +491,7 @@ class LikeTests(APITestCase):
         self.post.likes = 1
         self.post.save()
         
-        url = reverse('unlike-post', kwargs={'post_id': self.post.id})
+        url = reverse('like-post', kwargs={'post_id': self.post.id})
         response = self.client.delete(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -498,7 +505,7 @@ class LikeTests(APITestCase):
         """
         Test attempting to unlike a post that hasn't been liked.
         """
-        url = reverse('unlike-post', kwargs={'post_id': self.post.id})
+        url = reverse('like-post', kwargs={'post_id': self.post.id})
         response = self.client.delete(url)
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
