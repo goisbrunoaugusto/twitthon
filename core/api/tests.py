@@ -104,7 +104,7 @@ class UserInfoTests(APITestCase):
         """
         Test retrieving user info by ID.
         """
-        url = f"{reverse('user_info')}?id={self.user2.id}"
+        url = f"{reverse('user_info', kwargs={'user_identifier':self.user2.id})}"
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -114,7 +114,7 @@ class UserInfoTests(APITestCase):
         """
         Test retrieving user info by username.
         """
-        url = f"{reverse('user_info')}?username=user2"
+        url = f"{reverse('user_info', kwargs={'user_identifier':'user2'})}"
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -124,16 +124,7 @@ class UserInfoTests(APITestCase):
         """
         Test retrieving info for a non-existent user.
         """
-        url = f"{reverse('user_info')}?username=nonexistent"
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-    
-    def test_get_user_without_params(self):
-        """
-        Test retrieving user info without providing ID or username.
-        """
-        url = reverse('user_info')
+        url = f"{reverse('user_info', kwargs={'user_identifier':'nonexistent'})}"
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
