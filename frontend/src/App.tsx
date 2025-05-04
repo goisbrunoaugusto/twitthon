@@ -27,7 +27,6 @@ function App() {
         <Route path="/logout" element={<Logout />} />
         <Route path="/register" element={<RegisterAndLogout />} />
         <Route path="/users/:username" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
