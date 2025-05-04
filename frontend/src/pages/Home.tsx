@@ -49,7 +49,6 @@ function Home() {
     const [tweetImage, setTweetImage] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Fetch posts and set liked state from localStorage
     const fetchPosts = (pageNum: number) => {
         setLoading(true);
         api.get(`/users/feed/?page=${pageNum}`)
@@ -77,7 +76,6 @@ function Home() {
     const pageSize = 10;
     const totalPages = Math.ceil(count / pageSize);
 
-    // Like/unlike logic with localStorage
     const handleLike = (post: Post) => {
         const likedIds = getLikedPostsFromStorage();
         if (!post.liked) {
@@ -122,7 +120,7 @@ function Home() {
             setTweetContent("");
             setTweetImage(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
-            fetchPosts(1); // Refresh feed to show new post
+            fetchPosts(1);
         } catch (err) {
             console.error(err);
         }

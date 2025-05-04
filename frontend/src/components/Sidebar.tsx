@@ -1,12 +1,11 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ACCESS_TOKEN } from '../constants'; // Import the ACCESS_TOKEN constant
+import { ACCESS_TOKEN } from '../constants';
 import api from "../api";
 import { jwtDecode } from "jwt-decode";
 
 interface DecodedToken {
     user_id: number;
-    // Add other properties as needed from your JWT payload
 }
 
 const Sidebar: FunctionComponent = () => {
@@ -23,12 +22,12 @@ const Sidebar: FunctionComponent = () => {
                     throw new Error('Access token not found in local storage.');
                 }
 
-                // Use jwt-decode to get user_id
+
                 const decodedToken: DecodedToken = jwtDecode(token);
                 const userId = decodedToken.user_id;
                 console.log("Decoded user ID:", userId);
 
-                // Fetch user info using the ID from token
+
                 const response = await api.get(`/users/${userId}/info/`);
                 const userData = response.data;
                 console.log("User data fetched:", userData);
@@ -74,7 +73,6 @@ const Sidebar: FunctionComponent = () => {
 
             </nav>
 
-            {/* User info section at bottom of sidebar */}
             {username && (
                 <div className="mt-auto pt-4 border-t border-base-300">
                     <div className="flex items-center gap-3">

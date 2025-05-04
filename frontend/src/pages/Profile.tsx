@@ -8,8 +8,8 @@ import type { Post, User } from "../types";
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
 
-// Constants
-const ACCESS_TOKEN = "access"; // Token name in localStorage
+
+const ACCESS_TOKEN = "access";
 
 const Profile = () => {
     const { username } = useParams<{ username: string }>();
@@ -23,7 +23,7 @@ const Profile = () => {
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
     const [isFollowing, setIsFollowing] = useState(false);
 
-    // For debugging
+
     useEffect(() => {
         console.log("Component state updated:", {
             currentUserId,
@@ -33,7 +33,7 @@ const Profile = () => {
         });
     }, [currentUserId, username, user, isFollowing]);
 
-    // Get current user ID from token
+
     useEffect(() => {
         try {
             console.log("Getting user ID from access token...");
@@ -41,7 +41,7 @@ const Profile = () => {
             console.log("Token retrieved:", token ? "Found token" : "No token");
 
             if (token) {
-                // Decode token to get user_id
+
                 const decodedToken = jwtDecode<{ user_id: number }>(token);
                 console.log("Decoded token:", decodedToken);
 
@@ -49,7 +49,7 @@ const Profile = () => {
                     console.log("Found user_id in token:", decodedToken.user_id);
                     setCurrentUserId(decodedToken.user_id);
 
-                    // Verify by getting user info
+
                     api.get(`/users/${decodedToken.user_id}/info/`)
                         .then(res => {
                             console.log("Verified user info:", res.data);
@@ -71,7 +71,7 @@ const Profile = () => {
         }
     }, []);
 
-    // Fetch user info
+
     useEffect(() => {
         if (!username) return;
         console.log("Fetching profile info for username:", username);
@@ -87,7 +87,7 @@ const Profile = () => {
             });
     }, [username]);
 
-    // Check if current user is following this profile
+
     useEffect(() => {
         if (!user || !currentUserId) {
             console.log("Skipping follow check - missing data:", { user, currentUserId });
@@ -95,7 +95,7 @@ const Profile = () => {
         }
 
         console.log("Checking follow status for profile:", user.username);
-        // Using the proper endpoint for follow status check
+
         api.get(`/users/${user.username}/following-status/`)
             .then(res => {
                 console.log("Follow status response:", res.data);
@@ -107,7 +107,7 @@ const Profile = () => {
             });
     }, [user, currentUserId]);
 
-    // Fetch user posts
+
     const fetchPosts = (pageNum: number) => {
         if (!username) return;
         setLoading(true);
@@ -125,27 +125,27 @@ const Profile = () => {
 
     useEffect(() => {
         fetchPosts(1);
-        // eslint-disable-next-line
+
     }, [username]);
 
     const pageSize = 10;
     const totalPages = Math.ceil(count / pageSize);
 
-    // No like handler for profile feed (read-only)
+
     const handleLike = () => { };
 
-    // Handle follow/unfollow action
+
     const handleFollowToggle = async () => {
         if (!user) return;
 
         console.log(`Attempting to ${isFollowing ? 'unfollow' : 'follow'} user:`, user.username);
         try {
             if (isFollowing) {
-                // Endpoint for unfollowing a user
+
                 const response = await api.delete(`/users/${user.username}/follow/`);
                 console.log("Unfollow response:", response.data);
             } else {
-                // Endpoint for following a user
+
                 const response = await api.post(`/users/${user.username}/follow/`);
                 console.log("Follow response:", response.data);
             }
